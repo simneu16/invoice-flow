@@ -1,0 +1,4 @@
+project_id = "zqsbqlpxedkwyhffvjva"
+
+[functions.mysql-api]
+verify_jwt = false
