@@ -100,6 +100,18 @@ async function initTables(sql: ReturnType<typeof postgres>) {
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
   `;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS invoice_attachments (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      invoice_id UUID NOT NULL REFERENCES invoices(id) ON DELETE CASCADE,
+      user_id VARCHAR(255) NOT NULL,
+      file_name VARCHAR(255) NOT NULL,
+      file_url TEXT NOT NULL,
+      file_size INTEGER DEFAULT 0,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `;
 }
 
 Deno.serve(async (req) => {
