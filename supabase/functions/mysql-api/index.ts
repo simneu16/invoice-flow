@@ -100,6 +100,18 @@ async function initTables(sql: ReturnType<typeof postgres>) {
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
   `;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS invoice_attachments (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      invoice_id UUID NOT NULL REFERENCES invoices(id) ON DELETE CASCADE,
+      user_id VARCHAR(255) NOT NULL,
+      file_name VARCHAR(255) NOT NULL,
+      file_url TEXT NOT NULL,
+      file_size INTEGER DEFAULT 0,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `;
 }
 
 Deno.serve(async (req) => {
@@ -248,6 +260,39 @@ Deno.serve(async (req) => {
       const id = path.replace("invoices/", "");
       await sql`
         DELETE FROM invoices WHERE id = ${id} AND user_id = ${user.id}
+      `;
+      return json({ success: true });
+    }
+
+    // === ATTACHMENTS ===
+
+    // GET /invoices/:id/attachments
+    if (method === "GET" && path.match(/^invoices\/[^/]+\/attachments$/)) {
+      const invoiceId = path.split("/")[1];
+      const attachments = await sql`
+        SELECT * FROM invoice_attachments WHERE invoice_id = ${invoiceId} AND user_id = ${user.id} ORDER BY created_at DESC
+      `;
+      return json(attachments);
+    }
+
+    // POST /invoices/:id/attachments
+    if (method === "POST" && path.match(/^invoices\/[^/]+\/attachments$/)) {
+      const invoiceId = path.split("/")[1];
+      const body = await req.json();
+      const id = crypto.randomUUID();
+      await sql`
+        INSERT INTO invoice_attachments (id, invoice_id, user_id, file_name, file_url, file_size)
+        VALUES (${id}, ${invoiceId}, ${user.id}, ${body.file_name}, ${body.file_url}, ${body.file_size || 0})
+      `;
+      return json({ id, invoice_id: invoiceId, ...body });
+    }
+
+    // DELETE /invoices/:id/attachments/:attachmentId
+    if (method === "DELETE" && path.match(/^invoices\/[^/]+\/attachments\/[^/]+$/)) {
+      const parts = path.split("/");
+      const attachmentId = parts[3];
+      await sql`
+        DELETE FROM invoice_attachments WHERE id = ${attachmentId} AND user_id = ${user.id}
       `;
       return json({ success: true });
     }
