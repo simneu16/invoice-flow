@@ -264,6 +264,39 @@ Deno.serve(async (req) => {
       return json({ success: true });
     }
 
+    // === ATTACHMENTS ===
+
+    // GET /invoices/:id/attachments
+    if (method === "GET" && path.match(/^invoices\/[^/]+\/attachments$/)) {
+      const invoiceId = path.split("/")[1];
+      const attachments = await sql`
+        SELECT * FROM invoice_attachments WHERE invoice_id = ${invoiceId} AND user_id = ${user.id} ORDER BY created_at DESC
+      `;
+      return json(attachments);
+    }
+
+    // POST /invoices/:id/attachments
+    if (method === "POST" && path.match(/^invoices\/[^/]+\/attachments$/)) {
+      const invoiceId = path.split("/")[1];
+      const body = await req.json();
+      const id = crypto.randomUUID();
+      await sql`
+        INSERT INTO invoice_attachments (id, invoice_id, user_id, file_name, file_url, file_size)
+        VALUES (${id}, ${invoiceId}, ${user.id}, ${body.file_name}, ${body.file_url}, ${body.file_size || 0})
+      `;
+      return json({ id, invoice_id: invoiceId, ...body });
+    }
+
+    // DELETE /invoices/:id/attachments/:attachmentId
+    if (method === "DELETE" && path.match(/^invoices\/[^/]+\/attachments\/[^/]+$/)) {
+      const parts = path.split("/");
+      const attachmentId = parts[3];
+      await sql`
+        DELETE FROM invoice_attachments WHERE id = ${attachmentId} AND user_id = ${user.id}
+      `;
+      return json({ success: true });
+    }
+
     return json({ error: "Not found" }, 404);
   } catch (err) {
     console.error("PG API error:", err);
