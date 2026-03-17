@@ -10,7 +10,7 @@ import { Loader2, Save, Building2, CreditCard, Mail, Upload } from "lucide-react
 import { supabase } from "@/integrations/supabase/client";
 
 export default function Settings() {
-  const { data: settings, isLoading } = useCompanySettings();
+  const { data: settings, isLoading, isError, error, refetch } = useCompanySettings();
   const saveSettings = useSaveCompanySettings();
   const { toast } = useToast();
   const [uploading, setUploading] = useState(false);
