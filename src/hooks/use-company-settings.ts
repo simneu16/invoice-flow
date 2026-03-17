@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { apiFetchJson } from "@/lib/edge-api";
 
 export interface CompanySettings {
   id: string;
@@ -24,27 +24,7 @@ export interface CompanySettings {
   updated_at: string;
 }
 
-const PROJECT_ID = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-const BASE_URL = `https://${PROJECT_ID}.supabase.co/functions/v1/mysql-api`;
-
-async function apiFetch(path: string, options: RequestInit = {}) {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) throw new Error("Not authenticated");
-
-  const res = await fetch(`${BASE_URL}/${path}`, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${session.access_token}`,
-      apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-      ...(options.headers || {}),
-    },
-  });
-
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || "API error");
-  return data;
-}
+const apiFetch = <T,>(path: string, options: RequestInit = {}) => apiFetchJson<T>(path, options);
 
 export function useCompanySettings() {
   const { user } = useAuth();
