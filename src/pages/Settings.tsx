@@ -109,6 +109,16 @@ export default function Settings() {
     );
   }
 
+  if (isError) {
+    return (
+      <QueryErrorState
+        title="Nepodarilo sa načítať nastavenia"
+        description={error instanceof Error ? error.message : "Skúste obnoviť stránku alebo skontrolovať backend pripojenie."}
+        onRetry={() => refetch()}
+      />
+    );
+  }
+
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <div>

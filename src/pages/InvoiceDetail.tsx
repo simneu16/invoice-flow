@@ -55,6 +55,25 @@ export default function InvoiceDetail() {
     );
   }
 
+  if (isError) {
+    return (
+      <QueryErrorState
+        title="Nepodarilo sa načítať faktúru"
+        description={error instanceof Error ? error.message : "Skúste obnoviť stránku alebo skontrolovať backend pripojenie."}
+        onRetry={() => refetch()}
+      />
+    );
+  }
+
+  if (!invoice) {
+    return (
+      <QueryErrorState
+        title="Faktúra nebola nájdená"
+        description="Záznam neexistuje alebo k nemu nemáte prístup."
+      />
+    );
+  }
+
   const st = statusMap[invoice.status] || statusMap.draft;
 
   const handleDelete = async () => {
