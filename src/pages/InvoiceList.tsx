@@ -40,7 +40,7 @@ const statusMap: Record<string, { label: string; variant: "default" | "secondary
 };
 
 export default function InvoiceList() {
-  const { data: invoices, isLoading } = useInvoices();
+  const { data: invoices, isLoading, isError, error, refetch } = useInvoices();
   const deleteInvoice = useDeleteInvoice();
   const updateStatus = useUpdateInvoiceStatus();
   const { toast } = useToast();
