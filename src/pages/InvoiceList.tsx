@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useInvoices, useDeleteInvoice, useUpdateInvoiceStatus } from "@/hooks/use-invoices";
+import QueryErrorState from "@/components/QueryErrorState";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -39,7 +40,7 @@ const statusMap: Record<string, { label: string; variant: "default" | "secondary
 };
 
 export default function InvoiceList() {
-  const { data: invoices, isLoading } = useInvoices();
+  const { data: invoices, isLoading, isError, error, refetch } = useInvoices();
   const deleteInvoice = useDeleteInvoice();
   const updateStatus = useUpdateInvoiceStatus();
   const { toast } = useToast();
@@ -82,6 +83,16 @@ export default function InvoiceList() {
       <div className="flex h-64 items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
       </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <QueryErrorState
+        title="Nepodarilo sa načítať faktúry"
+        description={error instanceof Error ? error.message : "Skúste obnoviť stránku alebo skontrolovať backend pripojenie."}
+        onRetry={() => refetch()}
+      />
     );
   }
 

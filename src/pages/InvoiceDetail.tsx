@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useInvoice, useUpdateInvoiceStatus, useDeleteInvoice } from "@/hooks/use-invoices";
+import QueryErrorState from "@/components/QueryErrorState";
 import { useAttachments, useAddAttachment, useDeleteAttachment } from "@/hooks/use-attachments";
 import { useCompanySettings } from "@/hooks/use-company-settings";
 import { generateInvoicePDF } from "@/lib/generate-pdf";
@@ -34,7 +35,7 @@ function formatFileSize(bytes: number) {
 
 export default function InvoiceDetail() {
   const { id } = useParams();
-  const { data: invoice, isLoading } = useInvoice(id);
+  const { data: invoice, isLoading, isError, error, refetch } = useInvoice(id);
   const { data: companySettings } = useCompanySettings();
   const { data: attachments, isLoading: attachmentsLoading } = useAttachments(id);
   const addAttachment = useAddAttachment();
@@ -51,6 +52,25 @@ export default function InvoiceDetail() {
       <div className="flex h-64 items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
       </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <QueryErrorState
+        title="Nepodarilo sa načítať faktúru"
+        description={error instanceof Error ? error.message : "Skúste obnoviť stránku alebo skontrolovať backend pripojenie."}
+        onRetry={() => refetch()}
+      />
+    );
+  }
+
+  if (!invoice) {
+    return (
+      <QueryErrorState
+        title="Faktúra nebola nájdená"
+        description="Záznam neexistuje alebo k nemu nemáte prístup."
+      />
     );
   }
 

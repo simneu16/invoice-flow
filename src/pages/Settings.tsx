@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useCompanySettings, useSaveCompanySettings } from "@/hooks/use-company-settings";
+import QueryErrorState from "@/components/QueryErrorState";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,7 +10,7 @@ import { Loader2, Save, Building2, CreditCard, Mail, Upload } from "lucide-react
 import { supabase } from "@/integrations/supabase/client";
 
 export default function Settings() {
-  const { data: settings, isLoading } = useCompanySettings();
+  const { data: settings, isLoading, isError, error, refetch } = useCompanySettings();
   const saveSettings = useSaveCompanySettings();
   const { toast } = useToast();
   const [uploading, setUploading] = useState(false);
@@ -105,6 +106,16 @@ export default function Settings() {
       <div className="flex h-64 items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
       </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <QueryErrorState
+        title="Nepodarilo sa načítať nastavenia"
+        description={error instanceof Error ? error.message : "Skúste obnoviť stránku alebo skontrolovať backend pripojenie."}
+        onRetry={() => refetch()}
+      />
     );
   }
 

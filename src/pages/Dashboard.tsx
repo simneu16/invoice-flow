@@ -1,9 +1,10 @@
 import { useInvoices } from "@/hooks/use-invoices";
+import QueryErrorState from "@/components/QueryErrorState";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileText, Clock, CheckCircle, AlertTriangle } from "lucide-react";
 
 export default function Dashboard() {
-  const { data: invoices, isLoading } = useInvoices();
+  const { data: invoices, isLoading, isError, error, refetch } = useInvoices();
 
   const stats = invoices
     ? {
@@ -30,6 +31,16 @@ export default function Dashboard() {
       <div className="flex h-64 items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
       </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <QueryErrorState
+        title="Nepodarilo sa načítať prehľad"
+        description={error instanceof Error ? error.message : "Skúste obnoviť stránku alebo skontrolovať backend pripojenie."}
+        onRetry={() => refetch()}
+      />
     );
   }
 
