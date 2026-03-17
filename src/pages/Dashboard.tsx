@@ -34,6 +34,16 @@ export default function Dashboard() {
     );
   }
 
+  if (isError) {
+    return (
+      <QueryErrorState
+        title="Nepodarilo sa načítať prehľad"
+        description={error instanceof Error ? error.message : "Skúste obnoviť stránku alebo skontrolovať backend pripojenie."}
+        onRetry={() => refetch()}
+      />
+    );
+  }
+
   return (
     <div className="space-y-8">
       <div>

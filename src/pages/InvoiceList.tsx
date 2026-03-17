@@ -86,6 +86,16 @@ export default function InvoiceList() {
     );
   }
 
+  if (isError) {
+    return (
+      <QueryErrorState
+        title="Nepodarilo sa načítať faktúry"
+        description={error instanceof Error ? error.message : "Skúste obnoviť stránku alebo skontrolovať backend pripojenie."}
+        onRetry={() => refetch()}
+      />
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
