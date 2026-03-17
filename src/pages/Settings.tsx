@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useCompanySettings, useSaveCompanySettings } from "@/hooks/use-company-settings";
+import QueryErrorState from "@/components/QueryErrorState";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

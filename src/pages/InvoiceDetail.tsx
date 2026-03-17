@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useInvoice, useUpdateInvoiceStatus, useDeleteInvoice } from "@/hooks/use-invoices";
+import QueryErrorState from "@/components/QueryErrorState";
 import { useAttachments, useAddAttachment, useDeleteAttachment } from "@/hooks/use-attachments";
 import { useCompanySettings } from "@/hooks/use-company-settings";
 import { generateInvoicePDF } from "@/lib/generate-pdf";
