@@ -35,7 +35,7 @@ function formatFileSize(bytes: number) {
 
 export default function InvoiceDetail() {
   const { id } = useParams();
-  const { data: invoice, isLoading } = useInvoice(id);
+  const { data: invoice, isLoading, isError, error, refetch } = useInvoice(id);
   const { data: companySettings } = useCompanySettings();
   const { data: attachments, isLoading: attachmentsLoading } = useAttachments(id);
   const addAttachment = useAddAttachment();
