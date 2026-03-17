@@ -1,9 +1,10 @@
 import { useInvoices } from "@/hooks/use-invoices";
+import QueryErrorState from "@/components/QueryErrorState";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileText, Clock, CheckCircle, AlertTriangle } from "lucide-react";
 
 export default function Dashboard() {
-  const { data: invoices, isLoading } = useInvoices();
+  const { data: invoices, isLoading, isError, error, refetch } = useInvoices();
 
   const stats = invoices
     ? {
