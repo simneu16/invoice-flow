@@ -52,6 +52,7 @@ async function initTables(sql: ReturnType<typeof postgres>) {
       client_dic VARCHAR(50),
       client_ic_dph VARCHAR(50),
       issue_date DATE NOT NULL DEFAULT CURRENT_DATE,
+      delivery_date DATE,
       due_date DATE NOT NULL DEFAULT (CURRENT_DATE + INTERVAL '14 days'),
       status VARCHAR(20) NOT NULL DEFAULT 'draft',
       currency VARCHAR(10) NOT NULL DEFAULT 'EUR',
@@ -96,10 +97,22 @@ async function initTables(sql: ReturnType<typeof postgres>) {
       iban VARCHAR(50),
       swift VARCHAR(20),
       logo_url TEXT,
+      stamp_url TEXT,
+      signature_url TEXT,
+      trade_register TEXT,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
   `;
+
+  // Add new columns if they don't exist (for existing tables)
+  await sql`DO $$ BEGIN
+    ALTER TABLE invoices ADD COLUMN IF NOT EXISTS delivery_date DATE;
+    ALTER TABLE company_settings ADD COLUMN IF NOT EXISTS stamp_url TEXT;
+    ALTER TABLE company_settings ADD COLUMN IF NOT EXISTS signature_url TEXT;
+    ALTER TABLE company_settings ADD COLUMN IF NOT EXISTS trade_register TEXT;
+  EXCEPTION WHEN OTHERS THEN NULL;
+  END $$;`;
 
   await sql`
     CREATE TABLE IF NOT EXISTS invoice_attachments (
@@ -164,16 +177,20 @@ Deno.serve(async (req) => {
             iban = ${body.iban || null},
             swift = ${body.swift || null},
             logo_url = ${body.logo_url || null},
+            stamp_url = ${body.stamp_url || null},
+            signature_url = ${body.signature_url || null},
+            trade_register = ${body.trade_register || null},
             updated_at = NOW()
           WHERE user_id = ${user.id}
         `;
       } else {
         await sql`
-          INSERT INTO company_settings (user_id, company_name, ico, dic, ic_dph, address, city, postal_code, country, email, phone, website, bank_name, iban, swift, logo_url)
+          INSERT INTO company_settings (user_id, company_name, ico, dic, ic_dph, address, city, postal_code, country, email, phone, website, bank_name, iban, swift, logo_url, stamp_url, signature_url, trade_register)
           VALUES (${user.id}, ${body.company_name || null}, ${body.ico || null}, ${body.dic || null}, ${body.ic_dph || null},
             ${body.address || null}, ${body.city || null}, ${body.postal_code || null}, ${body.country || 'Slovensko'},
             ${body.email || null}, ${body.phone || null}, ${body.website || null},
-            ${body.bank_name || null}, ${body.iban || null}, ${body.swift || null}, ${body.logo_url || null})
+            ${body.bank_name || null}, ${body.iban || null}, ${body.swift || null}, ${body.logo_url || null},
+            ${body.stamp_url || null}, ${body.signature_url || null}, ${body.trade_register || null})
         `;
       }
 
@@ -224,11 +241,11 @@ Deno.serve(async (req) => {
 
       await sql`
         INSERT INTO invoices (id, user_id, invoice_number, client_name, client_email, client_address,
-          client_ico, client_dic, client_ic_dph, issue_date, due_date, tax_rate, subtotal, tax_amount, total, notes, currency, status)
+          client_ico, client_dic, client_ic_dph, issue_date, delivery_date, due_date, tax_rate, subtotal, tax_amount, total, notes, currency, status)
         VALUES (${id}, ${user.id}, ${invoice.invoice_number}, ${invoice.client_name},
           ${invoice.client_email || null}, ${invoice.client_address || null},
           ${invoice.client_ico || null}, ${invoice.client_dic || null}, ${invoice.client_ic_dph || null},
-          ${invoice.issue_date}, ${invoice.due_date}, ${invoice.tax_rate || 20},
+          ${invoice.issue_date}, ${invoice.delivery_date || null}, ${invoice.due_date}, ${invoice.tax_rate || 20},
           ${invoice.subtotal || 0}, ${invoice.tax_amount || 0}, ${invoice.total || 0},
           ${invoice.notes || null}, ${invoice.currency || "EUR"}, ${invoice.status || "draft"})
       `;
