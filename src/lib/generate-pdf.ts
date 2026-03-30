@@ -168,11 +168,16 @@ export async function generateInvoicePDF(
   const leftCardX = margin;
   const rightCardX = margin + halfW + 4;
 
-  const detailsData = [
+  const detailsData: [string, string][] = [
     ["Dátum vystavenia", fmtDate(invoice.issue_date)],
+  ];
+  if (invoice.delivery_date) {
+    detailsData.push(["Dátum dodania", fmtDate(invoice.delivery_date)]);
+  }
+  detailsData.push(
     ["Dátum splatnosti", fmtDate(invoice.due_date)],
     ["Mena", invoice.currency],
-  ];
+  );
   const detailCardH = 8 + detailsData.length * 5.5 + 4;
 
   const clientLines: string[] = [invoice.client_name];
@@ -395,8 +400,63 @@ export async function generateInvoicePDF(
     y += bankCardH + 4;
   }
 
+  // ──────────── STAMP & SIGNATURE ────────────
+  if (company?.stamp_url || company?.signature_url) {
+    const stampSigH = 30;
+    const stampSigCardH = stampSigH + 12;
+
+    // Check if we need a new page
+    if (y + stampSigCardH > ph - 25) {
+      doc.addPage();
+      fillPageBg(doc);
+      y = 14;
+    }
+
+    drawCard(doc, margin, y, cardW, stampSigCardH);
+
+    const imgY = y + 6;
+    let imgX = innerRight - 10;
+
+    if (company?.signature_url) {
+      try {
+        const sigImg = await loadImage(company.signature_url);
+        const sigRatio = sigImg.width / sigImg.height;
+        const sigH = Math.min(stampSigH, 25);
+        const sigW = Math.min(sigH * sigRatio, 40);
+        imgX -= sigW;
+        doc.addImage(sigImg, "PNG", imgX, imgY, sigW, sigH);
+        doc.setFontSize(5.5);
+        doc.setTextColor(...colors.muted);
+        doc.text("Podpis", imgX + sigW / 2, imgY + sigH + 3, { align: "center" });
+        imgX -= 10;
+      } catch { /* skip */ }
+    }
+
+    if (company?.stamp_url) {
+      try {
+        const stampImg = await loadImage(company.stamp_url);
+        const stampRatio = stampImg.width / stampImg.height;
+        const stampH = Math.min(stampSigH, 25);
+        const stampW = Math.min(stampH * stampRatio, 40);
+        imgX -= stampW;
+        doc.addImage(stampImg, "PNG", imgX, imgY, stampW, stampH);
+        doc.setFontSize(5.5);
+        doc.setTextColor(...colors.muted);
+        doc.text("Pečiatka", imgX + stampW / 2, imgY + stampH + 3, { align: "center" });
+      } catch { /* skip */ }
+    }
+
+    y += stampSigCardH + 4;
+  }
+
   // ──────────── NOTES CARD ────────────
   if (invoice.notes) {
+    if (y + 30 > ph - 25) {
+      doc.addPage();
+      fillPageBg(doc);
+      y = 14;
+    }
+
     const noteLines = doc.splitTextToSize(invoice.notes, cardW - cardPad * 2);
     const notesCardH = 8 + noteLines.length * 3.5 + 6;
     drawCard(doc, margin, y, cardW, notesCardH);
@@ -422,8 +482,18 @@ export async function generateInvoicePDF(
   if (company?.email) footerParts.push(company.email);
   if (company?.phone) footerParts.push(company.phone);
   if (company?.website) footerParts.push(company.website);
+
+  let footerY = ph - 8;
+
+  if (company?.trade_register) {
+    doc.setFontSize(5.5);
+    doc.text(company.trade_register, pw / 2, footerY, { align: "center", maxWidth: pw - 2 * margin });
+    footerY -= 4;
+  }
+
   if (footerParts.length > 0) {
-    doc.text(footerParts.join("  •  "), pw / 2, ph - 8, { align: "center" });
+    doc.setFontSize(6.5);
+    doc.text(footerParts.join("  •  "), pw / 2, footerY, { align: "center" });
   }
 
   doc.save(`faktura-${invoice.invoice_number}.pdf`);
