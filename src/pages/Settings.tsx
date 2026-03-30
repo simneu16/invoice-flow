@@ -57,6 +57,7 @@ export default function Settings() {
         stamp_url: settings.stamp_url || "",
         signature_url: settings.signature_url || "",
         trade_register: settings.trade_register || "",
+      });
     }
   }, [settings]);
 
