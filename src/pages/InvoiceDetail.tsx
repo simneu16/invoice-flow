@@ -181,6 +181,12 @@ export default function InvoiceDetail() {
               <span className="text-muted-foreground">Dátum vystavenia</span>
               <span className="text-foreground">{new Date(invoice.issue_date).toLocaleDateString("sk-SK")}</span>
             </div>
+            {invoice.delivery_date && (
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Dátum dodania</span>
+                <span className="text-foreground">{new Date(invoice.delivery_date).toLocaleDateString("sk-SK")}</span>
+              </div>
+            )}
             <div className="flex justify-between">
               <span className="text-muted-foreground">Dátum splatnosti</span>
               <span className="text-foreground">{new Date(invoice.due_date).toLocaleDateString("sk-SK")}</span>

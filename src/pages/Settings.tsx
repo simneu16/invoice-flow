@@ -31,6 +31,9 @@ export default function Settings() {
     iban: "",
     swift: "",
     logo_url: "",
+    stamp_url: "",
+    signature_url: "",
+    trade_register: "",
   });
 
   useEffect(() => {
@@ -51,6 +54,9 @@ export default function Settings() {
         iban: settings.iban || "",
         swift: settings.swift || "",
         logo_url: settings.logo_url || "",
+        stamp_url: settings.stamp_url || "",
+        signature_url: settings.signature_url || "",
+        trade_register: settings.trade_register || "",
       });
     }
   }, [settings]);
@@ -237,6 +243,92 @@ export default function Settings() {
               <Input id="logo" type="file" accept="image/*" onChange={handleLogoUpload} disabled={uploading} className="mt-1" />
               {uploading && <p className="mt-1 text-xs text-muted-foreground">Nahráva sa...</p>}
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Stamp & Signature */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Upload className="h-4 w-4" /> Pečiatka a podpis
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-6 sm:grid-cols-2">
+            <div className="space-y-4">
+              <Label>Pečiatka</Label>
+              {form.stamp_url && (
+                <div className="flex items-center gap-4">
+                  <img src={form.stamp_url} alt="Pečiatka" className="h-16 w-auto rounded border border-border object-contain" />
+                  <Button type="button" variant="outline" size="sm" onClick={() => handleChange("stamp_url", "")}>
+                    Odstrániť
+                  </Button>
+                </div>
+              )}
+              <Input type="file" accept="image/*" onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                setUploading(true);
+                try {
+                  const { data: { session } } = await supabase.auth.getSession();
+                  if (!session) throw new Error("Not authenticated");
+                  const ext = file.name.split(".").pop();
+                  const filePath = `stamps/${session.user.id}/stamp.${ext}`;
+                  const { error: uploadError } = await supabase.storage.from("company-assets").upload(filePath, file, { upsert: true });
+                  if (uploadError) throw uploadError;
+                  const { data: { publicUrl } } = supabase.storage.from("company-assets").getPublicUrl(filePath);
+                  setForm(prev => ({ ...prev, stamp_url: publicUrl }));
+                  toast({ title: "Pečiatka nahraná" });
+                } catch { toast({ title: "Chyba pri nahrávaní", variant: "destructive" }); }
+                finally { setUploading(false); }
+              }} disabled={uploading} />
+            </div>
+            <div className="space-y-4">
+              <Label>Podpis</Label>
+              {form.signature_url && (
+                <div className="flex items-center gap-4">
+                  <img src={form.signature_url} alt="Podpis" className="h-16 w-auto rounded border border-border object-contain" />
+                  <Button type="button" variant="outline" size="sm" onClick={() => handleChange("signature_url", "")}>
+                    Odstrániť
+                  </Button>
+                </div>
+              )}
+              <Input type="file" accept="image/*" onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                setUploading(true);
+                try {
+                  const { data: { session } } = await supabase.auth.getSession();
+                  if (!session) throw new Error("Not authenticated");
+                  const ext = file.name.split(".").pop();
+                  const filePath = `signatures/${session.user.id}/signature.${ext}`;
+                  const { error: uploadError } = await supabase.storage.from("company-assets").upload(filePath, file, { upsert: true });
+                  if (uploadError) throw uploadError;
+                  const { data: { publicUrl } } = supabase.storage.from("company-assets").getPublicUrl(filePath);
+                  setForm(prev => ({ ...prev, signature_url: publicUrl }));
+                  toast({ title: "Podpis nahraný" });
+                } catch { toast({ title: "Chyba pri nahrávaní", variant: "destructive" }); }
+                finally { setUploading(false); }
+              }} disabled={uploading} />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Trade Register */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Building2 className="h-4 w-4" /> Živnostenský register
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Label htmlFor="trade_register">Záznam (zobrazí sa v pätičke faktúry)</Label>
+            <Input
+              id="trade_register"
+              value={form.trade_register}
+              onChange={(e) => handleChange("trade_register", e.target.value)}
+              placeholder="Zapísaný v Živnostenskom registri Okresného úradu Bratislava, číslo živnostenského registra: 110-12345"
+              className="mt-1"
+            />
           </CardContent>
         </Card>
 

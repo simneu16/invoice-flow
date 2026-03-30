@@ -30,6 +30,7 @@ export default function InvoiceCreate() {
     client_dic: "",
     client_ic_dph: "",
     issue_date: new Date().toISOString().split("T")[0],
+    delivery_date: new Date().toISOString().split("T")[0],
     due_date: new Date(Date.now() + 14 * 86400000).toISOString().split("T")[0],
     notes: "",
   });
@@ -77,6 +78,7 @@ export default function InvoiceCreate() {
           client_dic: form.client_dic || null,
           client_ic_dph: form.client_ic_dph || null,
           issue_date: form.issue_date,
+          delivery_date: form.delivery_date || null,
           due_date: form.due_date,
           tax_rate: 0,
           subtotal: total,
@@ -137,6 +139,14 @@ export default function InvoiceCreate() {
                 type="date"
                 value={form.issue_date}
                 onChange={(e) => updateField("issue_date", e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Dátum dodania</Label>
+              <Input
+                type="date"
+                value={form.delivery_date}
+                onChange={(e) => updateField("delivery_date", e.target.value)}
               />
             </div>
             <div className="space-y-2">
