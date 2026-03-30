@@ -23,6 +23,7 @@ export interface Invoice {
   client_dic: string | null;
   client_ic_dph: string | null;
   issue_date: string;
+  delivery_date: string | null;
   due_date: string;
   status: "draft" | "sent" | "paid" | "overdue" | "cancelled";
   currency: string;

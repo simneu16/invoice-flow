@@ -20,6 +20,9 @@ export interface CompanySettings {
   iban: string | null;
   swift: string | null;
   logo_url: string | null;
+  stamp_url: string | null;
+  signature_url: string | null;
+  trade_register: string | null;
   created_at: string;
   updated_at: string;
 }
